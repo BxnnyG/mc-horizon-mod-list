@@ -1,18 +1,7 @@
-// A click on Mod Menu's "Mods" button opens the mod list.
+// A click on the mods icon in the pause screen's row opens the mod list.
 fn modmenu_click(game: &mut crate::game::Game<'_>) -> core::ops::ControlFlow<Result<()>> {
-    let (w, h) = {
-        let size = game
-            .renderer
-            .as_ref()
-            .map_or([1, 1], |r| [r.config.width, r.config.height]);
-        let b = HudBatch::new(size);
-        (b.width, b.height)
-    };
-    let links = !game.server_links().is_empty();
-    let hit = pause_buttons(w, h, game.external_server(), links)
-        .into_iter()
-        .any(|b| b.4 == 40 && ui::hovered(game.cursor, b.0, b.1, b.2, 20.0));
-    if !hit {
+    let [x, y] = crate::game::modmenu::pause_icon();
+    if !ui::hovered(game.cursor, x, y, 20.0, 20.0) {
         return core::ops::ControlFlow::Continue(());
     }
     game.audio.play_button_click();

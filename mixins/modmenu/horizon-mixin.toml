@@ -6,7 +6,7 @@ priority = 100
 # Adds to the pause and title screens (game internals): pinned to the commit it was
 # built against.
 [compatibility]
-horizon_revision = "d91cab68ded29bd2b004f7050c468fb98c41a00b"
+horizon_revision = "c9d474dd9116e84c243f8992d75c11314df56f06"
 
 [[module]]
 id = "runtime"
@@ -37,17 +37,7 @@ bindings = [
   { name = "mods", ty = "&mut Vec<crate::game::native_hooks::NativeMod>", value = "&mut *mods" },
 ]
 
-# Mod Menu's "Mods" button under Advancements and Statistics; the rows under
-# it move down one.
-[[injection]]
-id = "buttons"
-kind = "RETURN"
-target = "horizon_client::game::screens::pause_buttons"
-helper = "buttons.rs"
-bindings = [
-  { name = "buttons", ty = "Vec<(f32, f32, f32, &'static str, u8, bool)>", value = "$value" },
-]
-
+# The pause screen's icon row makes room for the mods icon.
 [[injection]]
 id = "icons"
 kind = "RETURN"
@@ -57,7 +47,7 @@ bindings = [
   { name = "icons", ty = "[(f32, f32, &'static str); 4]", value = "$value" },
 ]
 
-# A click on it opens the mod list.
+# A click on the icon opens the mod list.
 [[injection]]
 id = "click"
 kind = "HEAD"

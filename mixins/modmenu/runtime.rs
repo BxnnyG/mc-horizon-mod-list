@@ -23,6 +23,7 @@ struct State {
     /// The filter row is open; sorted Z-A.
     filters: bool,
     descending: bool,
+    pause_icon: [f32; 2],
 }
 
 thread_local! {
@@ -35,6 +36,14 @@ fn with<T>(f: impl FnOnce(&mut State) -> T) -> T {
 
 fn inside(r: R, p: (f32, f32)) -> bool {
     p.0 >= r[0] && p.0 < r[0] + r[2] && p.1 >= r[1] && p.1 < r[1] + r[3]
+}
+
+/// Where the pause screen's row put the mods icon (`icons.rs`).
+pub(super) fn set_pause_icon(x: f32, y: f32) {
+    with(|s| s.pause_icon = [x, y]);
+}
+pub(super) fn pause_icon() -> [f32; 2] {
+    with(|s| s.pause_icon)
 }
 
 /// Whether the list is showing.
@@ -272,13 +281,31 @@ fn gear(game: &Game<'_>, batch: &mut HudBatch, r: R, color: u32) {
     batch.fill_quad(atlas, square(2.8, std::f32::consts::FRAC_PI_4), horizon_client::hud::rgba(70, 70, 70, 255));
 }
 
+/// The small mods button of the title and pause screens.
+fn mods_icon(game: &Game<'_>, batch: &mut HudBatch, r: R) {
+    button(game, batch, r, "");
+    for (i, width) in [12.0, 12.0, 8.0].iter().enumerate() {
+        game.native_fill(batch, [r[0] + 4.0, r[1] + 5.0 + i as f32 * 4.0, *width, 2.0], 0xFFE8_E8E8);
+    }
+    if inside(r, game.cursor) {
+        let lines = [horizon_client::text::Text::literal("Mods")];
+        horizon_client::ui::tooltip(batch, &game.gui.atlas, &lines, game.cursor);
+    }
+}
+
 pub(super) fn draw(game: &mut Game<'_>, batch: &mut HudBatch) {
     use horizon_client::title::modmenu_title as t;
     let main = t::MAIN.swap(false, std::sync::atomic::Ordering::Relaxed);
     if !with(|s| s.open) {
         if main {
             let r = t::rect(batch.width, batch.height);
-            button(game, batch, r, "Mods");
+            mods_icon(game, batch, r);
+        }
+        // The icon after the pause screen's four, as Mod Menu's.
+        if game.screen == super::Screen::Paused && game.pause_menu {
+            let [x, y] = pause_icon();
+            let r = [x, y, 20.0, 20.0];
+            mods_icon(game, batch, r);
         }
         return;
     }
