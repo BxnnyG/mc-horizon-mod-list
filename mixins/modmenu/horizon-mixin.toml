@@ -1,0 +1,147 @@
+[mod]
+id = "modmenu"
+version = "1.0.0"
+priority = 100
+
+# Adds to the pause and title screens (game internals): pinned to the commit it was
+# built against.
+[compatibility]
+horizon_revision = "d91cab68ded29bd2b004f7050c468fb98c41a00b"
+
+[[module]]
+id = "runtime"
+file = "crates/horizon-client/src/game.rs"
+name = "modmenu"
+source = "runtime.rs"
+
+[[module]]
+id = "title-flag"
+file = "crates/horizon-client/src/title.rs"
+name = "modmenu_title"
+source = "title_flag.rs"
+visibility = "pub"
+
+[[module]]
+id = "options-flag"
+file = "crates/horizon-client-render/src/options_ui.rs"
+name = "modmenu_options"
+source = "options_flag.rs"
+visibility = "pub"
+
+[[injection]]
+id = "list"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_mods"
+helper = "list.rs"
+bindings = [
+  { name = "mods", ty = "&mut Vec<crate::game::native_hooks::NativeMod>", value = "&mut *mods" },
+]
+
+# Mod Menu's "Mods" button under Advancements and Statistics; the rows under
+# it move down one.
+[[injection]]
+id = "buttons"
+kind = "RETURN"
+target = "horizon_client::game::screens::pause_buttons"
+helper = "buttons.rs"
+bindings = [
+  { name = "buttons", ty = "Vec<(f32, f32, f32, &'static str, u8, bool)>", value = "$value" },
+]
+
+[[injection]]
+id = "icons"
+kind = "RETURN"
+target = "horizon_client::game::screens::pause_icons"
+helper = "icons.rs"
+bindings = [
+  { name = "icons", ty = "[(f32, f32, &'static str); 4]", value = "$value" },
+]
+
+# A click on it opens the mod list.
+[[injection]]
+id = "click"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client::game::screens::Game<'_>::pause_click"
+helper = "click.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+# The same button on the title screen, between Realms and Options: drawn
+# with the list's overlay while the main screen shows.
+[[injection]]
+id = "title-draw"
+kind = "HEAD"
+target = "horizon_client::title::Title::draw"
+helper = "title_draw.rs"
+bindings = [
+  { name = "title", ty = "&Title", value = "&*self" },
+]
+
+[[injection]]
+id = "title-click"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client::title::Title::click"
+helper = "title_click.rs"
+bindings = [
+  { name = "title", ty = "&Title", value = "&*self" },
+  { name = "x", ty = "f32", value = "x" },
+  { name = "y", ty = "f32", value = "y" },
+  { name = "size", ty = "(f32, f32)", value = "size" },
+]
+
+# The list takes the window's input while it is open.
+[[injection]]
+id = "input"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client::game::<Game<'_> as ApplicationHandler>::window_event"
+helper = "input.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "event", ty = "&winit::event::WindowEvent", value = "&event" },
+]
+
+[[injection]]
+id = "frame"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_frame"
+helper = "frame.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+[[injection]]
+id = "overlay"
+kind = "BEFORE_CALL"
+target = "horizon_client::game::Game<'_>::hud"
+selector = "self.draw_dialog"
+require = 1
+ordinal = 0
+helper = "overlay.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "batch", ty = "&mut horizon_client::hud::HudBatch", value = "$local_mut:batch:0" },
+]
+
+# Options > Mods opens the list instead of the plain page.
+[[injection]]
+id = "options-page"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client_render::options_ui::OptionsUi::push"
+helper = "options_page.rs"
+bindings = [
+  { name = "page", ty = "Page", value = "page" },
+]
+
+# The pause screen isn't drawn under the list.
+[[injection]]
+id = "pause"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client::game::screens::Game<'_>::draw_pause_menu"
+helper = "pause.rs"
+bindings = []
