@@ -135,3 +135,24 @@ cancellable = true
 target = "horizon_client::game::screens::Game<'_>::draw_pause_menu"
 helper = "pause.rs"
 bindings = []
+
+[[module]]
+id = "tip-flag"
+file = "crates/horizon-client-render/src/ui.rs"
+name = "modmenu_tip"
+source = "tip_flag.rs"
+visibility = "pub"
+
+# The mods icon goes in with the row, before the screen's tooltip, so a
+# tooltip of the other icons lies over it.
+[[injection]]
+id = "pause-icon"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client_render::ui::tooltip"
+helper = "pause_icon.rs"
+bindings = [
+  { name = "batch", ty = "&mut HudBatch", value = "&mut *batch" },
+  { name = "atlas", ty = "&HudAtlas", value = "atlas" },
+  { name = "cursor", ty = "(f32, f32)", value = "cursor" },
+]

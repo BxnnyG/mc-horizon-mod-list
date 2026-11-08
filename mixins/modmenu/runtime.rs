@@ -283,10 +283,16 @@ fn gear(game: &Game<'_>, batch: &mut HudBatch, r: R, color: u32) {
 
 /// The small mods button of the title and pause screens.
 fn mods_icon(game: &Game<'_>, batch: &mut HudBatch, r: R) {
+    mods_icon_body(game, batch, r);
+    mods_icon_tip(game, batch, r);
+}
+fn mods_icon_body(game: &Game<'_>, batch: &mut HudBatch, r: R) {
     button(game, batch, r, "");
     for (i, width) in [12.0, 12.0, 8.0].iter().enumerate() {
         game.native_fill(batch, [r[0] + 4.0, r[1] + 5.0 + i as f32 * 4.0, *width, 2.0], 0xFFE8_E8E8);
     }
+}
+fn mods_icon_tip(game: &Game<'_>, batch: &mut HudBatch, r: R) {
     if inside(r, game.cursor) {
         let lines = [horizon_client::text::Text::literal("Mods")];
         horizon_client::ui::tooltip(batch, &game.gui.atlas, &lines, game.cursor);
@@ -305,7 +311,13 @@ pub(super) fn draw(game: &mut Game<'_>, batch: &mut HudBatch) {
         if game.screen == super::Screen::Paused && game.pause_menu {
             let [x, y] = pause_icon();
             let r = [x, y, 20.0, 20.0];
-            mods_icon(game, batch, r);
+            // Drawn already when the row had a tooltip (`pause_icon.rs`).
+            use horizon_client::ui::modmenu_tip as tip;
+            tip::arm(None);
+            if !tip::DRAWN.swap(false, std::sync::atomic::Ordering::Relaxed) {
+                mods_icon_body(game, batch, r);
+            }
+            mods_icon_tip(game, batch, r);
         }
         return;
     }
