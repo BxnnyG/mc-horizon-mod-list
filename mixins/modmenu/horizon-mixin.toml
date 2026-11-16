@@ -6,7 +6,7 @@ priority = 100
 # Adds to the pause and title screens (game internals): pinned to the commit it was
 # built against.
 [compatibility]
-horizon_revision = "c9d474dd9116e84c243f8992d75c11314df56f06"
+horizon_revision = "fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca"
 
 [[module]]
 id = "runtime"
@@ -63,7 +63,7 @@ bindings = [
 [[injection]]
 id = "title-draw"
 kind = "HEAD"
-target = "horizon_client::title::Title::draw"
+target = "horizon_client::title::Title::draw_with_items"
 helper = "title_draw.rs"
 bindings = [
   { name = "title", ty = "&Title", value = "&*self" },
